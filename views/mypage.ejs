@@ -1,0 +1,45 @@
+<% const pageTitle = '마이페이지'; %>
+<%- include('partials/header') %>
+
+<!-- 
+  mypage.html의 <main> 내부 내용 
+  (EJS 변수로 정적 데이터를 대체합니다)
+-->
+
+<% if (typeof user !== 'undefined') { %>
+  <h1 class="mb-4">마이페이지</h1>
+  <p><strong><%= user.username %></strong>님, 환영합니다.</p>
+<% } else { %>
+  <h1 class="mb-4">마이페이지</h1>
+  <p>로그인 정보가 없습니다. <a href="/login">로그인</a>해주세요.</p>
+<% } %>
+
+<hr>
+<h3>내가 속한 스터디 목록</h3>
+<div class="list-group">
+    <a href="study-detail.html" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1">데일 카네기 인간관계론 스터디</h5>
+        <small>참여일: 2025-11-01</small>
+        </div>
+        <p class="mb-1">토론 중인 책: 데일 카네기 인간관계론</p>
+        <small>스터디장: 배지우</small>
+        <br>
+        <a href="summary.html" class="btn btn-primary btn-sm mt-2">요약 보러가기</a>
+    </a>
+    <br>
+      
+    <a href="study-detail.html" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1">Node.js 교과서 읽기</h5>
+        <small>참여일: 2025-10-28</small>
+        </div>
+        <p class="mb-1">토론 중인 책: Node.js 교과서</p>
+        <small>스터디장: 정의진</small>
+        <br>
+        <a href="summary.html" class="btn btn-primary btn-sm mt-2">요약 보러가기</a>
+    </a>
+    <br>
+</div>
+
+<%- include('partials/footer') %>

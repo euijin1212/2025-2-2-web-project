@@ -1,0 +1,81 @@
+<% 
+  // '수정' 모드와 '작성' 모드를 구분합니다.
+  const isEditing = (typeof study !== 'undefined');
+  const pageTitle = isEditing ? '스터디 수정' : '새 스터디 만들기';
+  const formAction = isEditing ? '/studies/' + study.id + '/update' : '/studies/create';
+  
+  // EJS 변수가 없어도 오류가 나지 않도록 기본값 설정
+  const studyTitle = isEditing ? study.title : '';
+  const studyDesc = isEditing ? study.description : '';
+  const studyMaxMembers = isEditing ? study.maxMembers : 10;
+%>
+
+<%- include('partials/header') %>
+
+<h1 class="mb-4">새 스터디 만들기</h1>
+
+<form action="/create-process" method="POST">
+    <div class="mb-3 p-3 bg-light rounded">
+        <label for="book-search" class="form-label fw-bold">1. 토론할 책 검색 (알라딘 API)</label>
+        <div class="input-group">
+            <input type="text" class="form-control" id="book-search" placeholder="책 제목을 입력하세요...">
+            <button class="btn btn-outline-secondary" type="button" id="book-search-btn">검색</button>
+        </div>
+        <div id="book-search-results" class="mt-2"></div>
+            <input type="hidden" name="bookIsbn" id="selected-book-isbn">
+            <input type="hidden" name="bookTitle" id="selected-book-title">
+            <input type="hidden" name="bookCoverUrl" id="selected-book-cover">
+            <input type="hidden" name="bookAuthor" id="selected-book-author">
+    </div>
+      
+    <div class="mb-3">
+        <label for="study-title" class="form-label">2. 스터디 제목</label>
+        <input type="text" class="form-control" id="study-title" name="title" required>
+    </div>
+      
+    <div class="mb-3">
+        <label for="study-description" class="form-label">3. 스터디 소개 및 규칙</label>
+        <textarea class="form-control" id="study-description" name="description" rows="10" required></textarea>
+    </div>
+      
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="study-max-members" class="form-label">모집 인원</label>
+            <input type="number" class="form-control" id="study-max-members" name="maxMembers" value="10">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="study-day" class="form-label">주요 요일</label>
+            <select id="study-day" class="form-select" name="day">
+                <option value="mon">월</option>
+                <option value="tue">화</option>
+                <option value="wed">수</option>
+                <option value="thu">목</option>
+                <option value="fri">금</option>
+                <option value="sat">토</option>
+                <option value="sun">일</option>
+            </select> 
+        </div>
+    </div>
+
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">스터디 개설하기</button>
+    </div>
+</form>
+
+<script>
+  document.getElementById('book-search-btn').addEventListener('click', () => {
+    const keyword = document.getElementById('book-search').value;
+    alert(keyword + ' 검색 기능은 Node.js 서버 연동(fetch)이 필요합니다.');
+    
+    // (구현 예시)
+    // fetch(`/search-books?keyword=${encodeURIComponent(keyword)}`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     const resultsEl = document.getElementById('book-search-results');
+    //     resultsEl.innerHTML = ''; // 기존 결과 비우기
+    //     // data.items.forEach(book => { ... (결과 목록 렌더링) ... });
+    //   });
+  });
+</script>
+
+<%- include('partials/footer') %>
