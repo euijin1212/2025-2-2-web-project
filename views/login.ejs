@@ -21,7 +21,7 @@
           
         <!-- 로그인 폼 -->
         <div class="tab-pane fade show active" id="login-panel" role="tabpanel">
-            <form action="/login-process" method="POST">
+            <form action="/auth/login" method="POST">
                 <div class="mb-3">
                     <label for="login-email" class="form-label">이메일</label>
                     <input type="email" class="form-control" id="login-email" name="email" required>
@@ -37,10 +37,10 @@
         </div>
         <!-- 회원가입 폼 -->
         <div class="tab-pane fade" id="register-panel" role="tabpanel">
-            <form action="/register-process" method="POST">
+            <form action="/auth/signup" method="POST">
             <div class="mb-3">
                 <label for="register-username" class="form-label">이름 (닉네임)</label>
-                <input type="text" class="form-control" id="register-username" name="username" required>
+                <input type="text" class="form-control" id="register-username" name="nickname" required>
             </div>
             <div class="mb-3">
                 <label for="register-email" class="form-label">이메일</label>
