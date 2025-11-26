@@ -1,0 +1,66 @@
+<%- include('partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-4">
+    <% if (study.bookCoverUrl) { %>
+      <img src="<%= study.bookCoverUrl %>" class="img-fluid rounded" alt="책 표지">
+    <% } else { %>
+      <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+           style="width:100%; height:300px;">
+        <span class="text-muted">책 표지 없음</span>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="col-md-8">
+    <h1 class="mb-3"><%= study.title %></h1>
+
+    <% if (study.bookTitle) { %>
+      <p class="text-muted mb-1">📚 <strong><%= study.bookTitle %></strong></p>
+    <% } %>
+    <% if (study.bookAuthor) { %>
+      <p class="text-muted mb-3">✍️ <%= study.bookAuthor %></p>
+    <% } %>
+
+    <p class="mb-2">
+      <% if (study.day) { %>
+        <span class="badge bg-secondary">
+          요일:
+          <% if (study.day === 'mon') { %>월<% } %>
+          <% if (study.day === 'tue') { %>화<% } %>
+          <% if (study.day === 'wed') { %>수<% } %>
+          <% if (study.day === 'thu') { %>목<% } %>
+          <% if (study.day === 'fri') { %>금<% } %>
+          <% if (study.day === 'sat') { %>토<% } %>
+          <% if (study.day === 'sun') { %>일<% } %>
+        </span>
+      <% } %>
+
+      <% if (study.maxMembers) { %>
+        <span class="badge bg-info text-dark">
+          최대 <%= study.maxMembers %>명
+        </span>
+      <% } %>
+    </p>
+
+    <p class="text-muted mb-1">
+      개설자: <%= study.creatorName || '알 수 없음' %>
+    </p>
+
+
+    <hr>
+    
+    <% if (user && study.creatorId && user.id === study.creatorId) { %>
+    <a href="/studies/<%= study.id %>/edit" class="btn btn-sm btn-outline-secondary">
+        수정하기
+    </a>
+    <% } %>
+
+    <h5>스터디 소개 및 규칙</h5>
+    <p style="white-space:pre-line;"><%= study.description %></p>
+
+    <a href="/studies" class="btn btn-outline-secondary mt-3">다른 스터디 보러가기</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
