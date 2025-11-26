@@ -1,80 +1,158 @@
-<% 
-  // '수정' 모드와 '작성' 모드를 구분합니다.
+
+<!-- 스터디 만들기 페이지 ejs -->
+
+
+
+
+<!-- 수정 일 때와 일반적으로 만들 때 두가지 버전으로 변수들이 바뀌도록 함 -->
+ <!-- 렌더링 할 때 객체를 넘겨줌 ex) study -->
+<%  
   const isEditing = (typeof study !== 'undefined');
   const pageTitle = isEditing ? '스터디 수정' : '새 스터디 만들기';
   const formAction = isEditing ? '/studies/' + study.id + '/update' : '/studies/create';
-  
-  // EJS 변수가 없어도 오류가 나지 않도록 기본값 설정
   const studyTitle = isEditing ? study.title : '';
   const studyDesc = isEditing ? study.description : '';
   const studyMaxMembers = isEditing ? study.maxMembers : 10;
+  const studyDay = isEditing ? (study.day || '') : '';
+
+  const bookIsbn = isEditing ? (study.bookIsbn || '') : '';
+  const bookTitle = isEditing ? (study.bookTitle || '') : '';
+  const bookCoverUrl = isEditing ? (study.bookCoverUrl || '') : '';
+  const bookAuthor = isEditing ? (study.bookAuthor || '') : '';
 %>
 
-<%- include('partials/header') %>
+<%- include('partials/header') %> 
 
-<h1 class="mb-4">새 스터디 만들기</h1>
+<h1 class="mb-4"><%= pageTitle %></h1>
+<!-- formAction 역시 수정일 때와 아닐 때 구분위해 변수로 둠 -->
+<form id="study-form" action="<%= formAction %>" method="POST">
+  <div class="mb-3 p-3 bg-light rounded">
+    <label for="book-search" class="form-label fw-bold">1. 토론할 책 검색 (알라딘)</label>
+    <div class="input-group">
+      <input type="text" class="form-control" id="book-search" placeholder="책 제목을 입력하세요..." value="">
+      <button class="btn btn-outline-secondary" type="button" id="book-search-btn">검색</button>
+    </div>
+    <div id="book-search-results" class="mt-2"></div>
 
-<form action="/create-process" method="POST">
-    <div class="mb-3 p-3 bg-light rounded">
-        <label for="book-search" class="form-label fw-bold">1. 토론할 책 검색 (알라딘 API)</label>
-        <div class="input-group">
-            <input type="text" class="form-control" id="book-search" placeholder="책 제목을 입력하세요...">
-            <button class="btn btn-outline-secondary" type="button" id="book-search-btn">검색</button>
-        </div>
-        <div id="book-search-results" class="mt-2"></div>
-            <input type="hidden" name="bookIsbn" id="selected-book-isbn">
-            <input type="hidden" name="bookTitle" id="selected-book-title">
-            <input type="hidden" name="bookCoverUrl" id="selected-book-cover">
-            <input type="hidden" name="bookAuthor" id="selected-book-author">
-    </div>
-      
-    <div class="mb-3">
-        <label for="study-title" class="form-label">2. 스터디 제목</label>
-        <input type="text" class="form-control" id="study-title" name="title" required>
-    </div>
-      
-    <div class="mb-3">
-        <label for="study-description" class="form-label">3. 스터디 소개 및 규칙</label>
-        <textarea class="form-control" id="study-description" name="description" rows="10" required></textarea>
-    </div>
-      
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <label for="study-max-members" class="form-label">모집 인원</label>
-            <input type="number" class="form-control" id="study-max-members" name="maxMembers" value="10">
-        </div>
-        <div class="col-md-4 mb-3">
-            <label for="study-day" class="form-label">주요 요일</label>
-            <select id="study-day" class="form-select" name="day">
-                <option value="mon">월</option>
-                <option value="tue">화</option>
-                <option value="wed">수</option>
-                <option value="thu">목</option>
-                <option value="fri">금</option>
-                <option value="sat">토</option>
-                <option value="sun">일</option>
-            </select> 
-        </div>
-    </div>
+    <!--hidden input에 기존 값 세팅 -->
+    <input type="hidden" name="bookIsbn" id="selected-book-isbn" value="<%= bookIsbn %>">
+    <input type="hidden" name="bookTitle" id="selected-book-title" value="<%= bookTitle %>">
+    <input type="hidden" name="bookCoverUrl" id="selected-book-cover" value="<%= bookCoverUrl %>">
+    <input type="hidden" name="bookAuthor" id="selected-book-author" value="<%= bookAuthor %>">
 
-    <div class="d-grid">
-        <button type="submit" class="btn btn-primary btn-lg">스터디 개설하기</button>
+    <!--수정 모드일 때 이미 선택된 책 미리 보여주기 -->
+    <div id="selected-book-preview" class="mt-2">
+      <% if (bookTitle || bookCoverUrl) { %>
+        <div class="d-flex align-items-center">
+          <% if (bookCoverUrl) { %>
+            <img src="<%= bookCoverUrl %>" style="width:64px;height:96px;object-fit:cover;margin-right:10px;">
+          <% } %>
+          <div>
+            <div><strong><%= bookTitle %></strong></div>
+            <div class="text-muted"><%= bookAuthor %></div>
+          </div>
+        </div>
+      <% } %>
     </div>
+  </div>
+    
+  <div class="mb-3">
+    <label for="study-title" class="form-label">2. 스터디 제목</label>
+    <input type="text" class="form-control" id="study-title" name="title" required value="<%= studyTitle %>">
+  </div>
+    
+  <div class="mb-3">
+    <label for="study-description" class="form-label">3. 스터디 소개 및 규칙</label>
+    <textarea class="form-control" id="study-description" name="description" rows="10" required><%= studyDesc %></textarea>
+  </div>
+    
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label for="study-max-members" class="form-label">모집 인원</label>
+      <input type="number" class="form-control" id="study-max-members" name="maxMembers" value="<%= studyMaxMembers %>">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label for="study-day" class="form-label">주요 요일</label>
+      <select id="study-day" class="form-select" name="day">
+        <option value="">선택 안 함</option>
+        <option value="mon" <%= studyDay === 'mon' ? 'selected' : '' %>>월</option>
+        <option value="tue" <%= studyDay === 'tue' ? 'selected' : '' %>>화</option>
+        <option value="wed" <%= studyDay === 'wed' ? 'selected' : '' %>>수</option>
+        <option value="thu" <%= studyDay === 'thu' ? 'selected' : '' %>>목</option>
+        <option value="fri" <%= studyDay === 'fri' ? 'selected' : '' %>>금</option>
+        <option value="sat" <%= studyDay === 'sat' ? 'selected' : '' %>>토</option>
+        <option value="sun" <%= studyDay === 'sun' ? 'selected' : '' %>>일</option>
+      </select> 
+    </div>
+  </div>
+
+  <div class="d-grid">
+    <button type="submit" class="btn btn-primary btn-lg"><%= pageTitle %></button>
+  </div>
 </form>
 
 <script>
+  const resultsEl = document.getElementById('book-search-results');
+  const previewEl = document.getElementById('selected-book-preview');
+
+  async function searchBooks(keyword) {
+    if (!keyword) return;
+    resultsEl.innerHTML = '검색 중...';
+    try {
+      const res = await fetch(`/search-books?keyword=${encodeURIComponent(keyword)}`);
+      const data = await res.json();
+      resultsEl.innerHTML = '';
+      if (!data.books || data.books.length === 0) {
+        resultsEl.innerHTML = '<div class="text-muted">검색 결과가 없습니다.</div>';
+        return;
+      }
+      const list = document.createElement('div');
+      data.books.forEach(book => {
+        const item = document.createElement('div');
+        item.className = 'd-flex align-items-center mb-2 p-2 border rounded';
+        item.innerHTML = `
+          <img src="${book.cover || ''}" alt="" style="width:48px;height:72px;object-fit:cover;margin-right:10px;">
+          <div class="flex-fill">
+            <div><strong>${book.title}</strong></div>
+            <div class="text-muted">${book.author || ''}</div>
+          </div>
+          <div><button class="btn btn-sm btn-outline-primary select-book-btn">선택</button></div>
+        `;
+        item.querySelector('.select-book-btn').addEventListener('click', () => {
+          document.getElementById('selected-book-isbn').value = book.isbn || '';
+          document.getElementById('selected-book-title').value = book.title || '';
+          document.getElementById('selected-book-cover').value = book.cover || '';
+          document.getElementById('selected-book-author').value = book.author || '';
+          previewEl.innerHTML = `
+            <div class="d-flex align-items-center">
+              <img src="${book.cover || ''}" style="width:64px;height:96px;object-fit:cover;margin-right:10px;">
+              <div>
+                <div><strong>${book.title}</strong></div>
+                <div class="text-muted">${book.author || ''}</div>
+              </div>
+            </div>
+          `;
+          resultsEl.innerHTML = '';
+        });
+        list.appendChild(item);
+      });
+      resultsEl.appendChild(list);
+    } catch (err) {
+      console.error(err);
+      resultsEl.innerHTML = '<div class="text-danger">검색 중 오류가 발생했습니다.</div>';
+    }
+  }
+
   document.getElementById('book-search-btn').addEventListener('click', () => {
-    const keyword = document.getElementById('book-search').value;
-    alert(keyword + ' 검색 기능은 Node.js 서버 연동(fetch)이 필요합니다.');
-    
-    // (구현 예시)
-    // fetch(`/search-books?keyword=${encodeURIComponent(keyword)}`)
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     const resultsEl = document.getElementById('book-search-results');
-    //     resultsEl.innerHTML = ''; // 기존 결과 비우기
-    //     // data.items.forEach(book => { ... (결과 목록 렌더링) ... });
-    //   });
+    const keyword = document.getElementById('book-search').value.trim();
+    searchBooks(keyword);
+  });
+
+  document.getElementById('book-search').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('book-search-btn').click();
+    }
   });
 </script>
 
