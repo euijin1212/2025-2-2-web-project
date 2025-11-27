@@ -12,6 +12,11 @@ body {
   height: 30px;
   margin-right: 15px;
 }
+.icon-png-small {
+  width: 15px; 
+  height: 15px;
+  margin-right: 5px;
+}
 
 /* 요일 선택 토글 */
 .day-btn-wrapper .btn-check:not(:checked) + .btn-outline-dark {
