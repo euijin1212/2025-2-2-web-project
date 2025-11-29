@@ -47,14 +47,40 @@
       개설자: <%= study.creatorName || '알 수 없음' %>
     </p>
 
-
     <hr>
-    
-    <% if (user && study.creatorId && user.id === study.creatorId) { %>
-    <a href="/studies/<%= study.id %>/edit" class="btn btn-sm btn-outline-secondary">
-        수정하기
-    </a>
-    <% } %>
+
+    <!-- ✅ 가입/탈퇴/홈 버튼 영역 -->
+    <div class="mb-3">
+      <% if (!user) { %>
+        <!-- 비로그인 -->
+        <a href="/login" class="btn btn-warning btn-sm">
+          로그인 후 가입 가능합니다
+        </a>
+
+      <% } else if (!isMember) { %>
+        <!-- 아직 가입 안 한 유저 → 가입하기만 -->
+        <form action="/studies/<%= study.id %>/join" method="POST">
+          <button type="submit" class="btn btn-primary btn-sm">
+            🙋 스터디 가입하기
+          </button>
+        </form>
+
+      <% } else { %>
+        <!-- 이미 가입된 유저 -->
+        <a href="/studies/<%= study.id %>/room" class="btn btn-success btn-sm me-2">
+          ▶ 스터디 홈으로 이동
+        </a>
+
+        <% if (!isOwner) { %>
+          <!-- 리더가 아닌 멤버만 탈퇴 가능 -->
+          <form action="/studies/<%= study.id %>/leave" method="POST" style="display:inline;">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              ❌ 탈퇴하기
+            </button>
+          </form>
+        <% } %>
+      <% } %>
+    </div>
 
     <h5>스터디 소개 및 규칙</h5>
     <p style="white-space:pre-line;"><%= study.description %></p>

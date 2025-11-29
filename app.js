@@ -5,10 +5,15 @@ require('dotenv').config(); // .env 파일 읽어서 process.env 환경변수 �
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 채팅 구현을 위함
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server);
+
 // --- 세션 & MySQL 설정 ---
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
-
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST || '127.0.0.1',
   port: process.env.DB_PORT || 3306,
@@ -59,12 +64,50 @@ const pool = require('./db');
 const studiesRouter = require('./routes/studies');
 
 app.use('/auth', require('./routes/auth'));
-app.use('/studies', studiesRouter);   // ✅ 스터디 라우터만 사용
+app.use('/studies', studiesRouter);   //  스터디 라우터만 사용
 
 // --- 페이지 라우트 ---
-app.get('/',        (req, res) => res.render('index'));
-app.get('/login',   (req, res) => res.render('login'));
-app.get('/summary', (req, res) => res.render('summary'));
+app.get('/', (req, res) => {
+  // 로그인 되어 있으면 대시보드로 이동
+  if (req.session?.user) {
+    return res.redirect('/dashboard');
+  }
+
+  // 비로그인 → 기존 로그인 페이지 보여주기
+  return res.render('login');
+});
+app.get('/login', (req, res) => {
+  res.render('login', { activeTab: 'login' });
+});
+
+app.get('/dashboard', requireLogin, async (req, res) => {
+  // 로그인 안 되어 있으면 requireLogin에서 /login 으로 redirect
+  const userId = req.session.user.id;
+
+  try {
+    const [myStudies] = await pool.query(`
+      SELECT 
+        s.id,
+        s.title,
+        s.description,
+        s.max_members AS maxMembers,
+        s.day,
+        s.created_at AS createdAt
+      FROM studies s
+      JOIN study_members m ON s.id = m.study_id
+      WHERE m.user_id = ?
+      ORDER BY s.created_at DESC
+    `, [userId]);
+
+    res.render('dashboard', {
+      pageTitle: '내 스터디',
+      myStudies
+    });
+  } catch (err) {
+    console.error('/dashboard error:', err);
+    res.status(500).send('서버 에러');
+  }
+});
 
 // 마이페이지: 내가 만든 스터디만 표시
 app.get('/mypage', requireLogin, async (req, res) => {
@@ -133,11 +176,57 @@ app.get('/search-books', async (req, res) => {
     res.status(500).json({ books: [] });
   }
 });
+// Socket.IO: 스터디별 채팅방
+io.on('connection', (socket) => {
+  // 쿼리로 넘어온 값 (studyId, userId, nickname)
+  const { studyId, userId, nickname } = socket.handshake.query;
+
+  if (!studyId || !userId) {
+    console.log('잘못된 소켓 연결 (studyId/userId 없음)');
+    socket.disconnect();
+    return;
+  }
+
+  const roomName = `study_${studyId}`;
+  socket.join(roomName);
+
+  console.log(`✅ 소켓 접속: userId=${userId}, studyId=${studyId}`);
+
+  // 클라이언트에서 chatMessage 이벤트 받기
+  socket.on('chatMessage', async (msg) => {
+    const text = (msg || '').toString().trim();
+    if (!text) return;
+
+    // DB 저장 
+    try {
+      await pool.query(
+        `INSERT INTO study_chat_messages (study_id, user_id, message)
+         VALUES (?, ?, ?)`,
+        [studyId, userId, text]
+      );
+    } catch (err) {
+      console.error('chat insert error:', err);
+    }
+
+    // 같은 방(studyId)에 브로드캐스트
+    io.to(roomName).emit('chatMessage', {
+      userId,
+      nickname,
+      message: text,
+      createdAt: new Date().toISOString(),
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`🔌 소켓 종료: userId=${userId}, studyId=${studyId}`);
+  });
+});
+
 
 // --- 404 핸들러 ---
 app.use((req, res) => res.status(404).send('Not Found'));
 
 // --- 서버 실행 ---
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
