@@ -282,36 +282,84 @@ router.post('/:id/update', requireLogin, async (req, res) => {
 });
 
 // 🔹 스터디 삭제 (GET/POST 모두 허용)
-async function deleteStudyHandler(req, res) {
-  try {
-    const id = Number(req.params.id);
-    const userId = req.session.user.id;
+// /studies/:id/delete 로 오는 GET/POST 전부 여기로
+router.all('/:id/delete', requireLogin, deleteStudyHandler);
 
-    const [[study]] = await pool.query('SELECT * FROM studies WHERE id = ?', [id]);
+// 🔹 스터디 삭제 (GET/POST 모두 허용)
+async function deleteStudyHandler(req, res) {
+  const id = Number(req.params.id);
+  const userId = req.session.user.id;
+
+  const conn = await pool.getConnection();
+  try {
+    // 1) 이 스터디가 실제로 존재하는지 + 권한 체크
+    const [[study]] = await conn.query(
+      'SELECT * FROM studies WHERE id = ?',
+      [id]
+    );
 
     if (!study) {
+      conn.release();
       return res.status(404).send('존재하지 않는 스터디입니다.');
     }
 
     if (study.creator_id !== userId) {
+      conn.release();
       return res.status(403).send('삭제 권한이 없습니다.');
     }
 
-    // 먼저 study_members에서 관련 멤버 삭제 (FK 에러 방지)
-    await pool.query('DELETE FROM study_members WHERE study_id = ?', [id]);
+    // 2) 트랜잭션 시작
+    await conn.beginTransaction();
 
-    // 그 다음 스터디 삭제
-    await pool.query('DELETE FROM studies WHERE id = ?', [id]);
+    // 2-1) 댓글 → 게시글 기준으로 먼저 삭제
+    //      study_comments 에는 study_id가 없고 post_id만 있으니까
+    await conn.query(`
+      DELETE c
+      FROM study_comments c
+      JOIN study_posts p ON c.post_id = p.id
+      WHERE p.study_id = ?
+    `, [id]);
+
+    // 2-2) 채팅 메시지 삭제
+    await conn.query(
+      'DELETE FROM study_chat_messages WHERE study_id = ?',
+      [id]
+    );
+
+    // 2-3) 게시글 삭제
+    await conn.query(
+      'DELETE FROM study_posts WHERE study_id = ?',
+      [id]
+    );
+
+    // 2-4) 멤버 삭제
+    await conn.query(
+      'DELETE FROM study_members WHERE study_id = ?',
+      [id]
+    );
+
+    // 2-5) 마지막으로 스터디 삭제
+    await conn.query(
+      'DELETE FROM studies WHERE id = ?',
+      [id]
+    );
+
+    await conn.commit();
+    conn.release();
 
     return res.redirect('/mypage');
   } catch (err) {
     console.error('DELETE /studies/:id/delete error:', err);
+    try {
+      await conn.rollback();
+    } catch (_) {}
+    conn.release();
     return res.status(500).send('서버 에러');
   }
 }
 
-// /studies/:id/delete 로 오는 GET/POST 전부 여기로
-router.all('/:id/delete', requireLogin, deleteStudyHandler);
+
+
 
 // 🔹 스터디 가입 (멤버로 참여)
 router.post('/:id/join', requireLogin, async (req, res) => {

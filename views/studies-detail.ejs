@@ -49,8 +49,9 @@
 
     <hr>
 
-    <!-- ✅ 가입/탈퇴/홈 버튼 영역 -->
+    <!-- 🔥 최종 병합된 버튼 영역: HEAD 기능 + 수정 버튼 -->
     <div class="mb-3">
+
       <% if (!user) { %>
         <!-- 비로그인 -->
         <a href="/login" class="btn btn-warning btn-sm">
@@ -58,7 +59,7 @@
         </a>
 
       <% } else if (!isMember) { %>
-        <!-- 아직 가입 안 한 유저 → 가입하기만 -->
+        <!-- 아직 가입 안 한 유저 → 가입 버튼 -->
         <form action="/studies/<%= study.id %>/join" method="POST">
           <button type="submit" class="btn btn-primary btn-sm">
             🙋 스터디 가입하기
@@ -80,6 +81,14 @@
           </form>
         <% } %>
       <% } %>
+
+      <!-- 🔧 리더만 수정 버튼 추가 (feat/frontend 기능 통합) -->
+      <% if (user && study.creatorId && user.id === study.creatorId) { %>
+        <a href="/studies/<%= study.id %>/edit" class="btn btn-sm btn-outline-secondary ms-2">
+          수정하기
+        </a>
+      <% } %>
+
     </div>
 
     <h5>스터디 소개 및 규칙</h5>
