@@ -281,7 +281,6 @@ router.post('/:id/update', requireLogin, async (req, res) => {
   }
 });
 
-// 🔹 스터디 삭제 (GET/POST 모두 허용)
 // /studies/:id/delete 로 오는 GET/POST 전부 여기로
 router.all('/:id/delete', requireLogin, deleteStudyHandler);
 
@@ -846,24 +845,36 @@ router.get('/:id/chat', requireLogin, async (req, res) => {
       return res.redirect('/studies/' + studyId);
     }
 
-    // 최근 채팅 메시지 50개 불러오기
-    const [messages] = await pool.query(`
-      SELECT m.id,
-             m.message,
-             m.created_at AS createdAt,
-             u.nickname
-      FROM study_chat_messages m
-      LEFT JOIN users u ON u.id = m.user_id
-      WHERE m.study_id = ?
-      ORDER BY m.created_at ASC
-      LIMIT 50
-    `, [studyId]);
+// 최근 채팅 메시지 50개 불러오기
+const [messagesRaw] = await pool.query(`
+  SELECT m.id,
+         m.message,
+         m.created_at AS createdAt,
+         u.nickname
+  FROM study_chat_messages m
+  LEFT JOIN users u ON u.id = m.user_id
+  WHERE m.study_id = ?
+  ORDER BY m.created_at ASC
+  LIMIT 50
+`, [studyId]);
 
-    res.render('study-chat', {
-      pageTitle: `${study.title} - 채팅`,
-      study,
-      messages
-    });
+// 날짜 포맷팅 추가
+const messages = messagesRaw.map(row => ({
+  ...row,
+  createdAtFormatted: new Date(row.createdAt).toLocaleString('ko-KR', {
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    day: "2-digit"
+  })
+}));
+
+res.render('study-chat', {
+  pageTitle: `${study.title} - 채팅`,
+  study,
+  messages
+});
+
   } catch (err) {
     console.error('GET /studies/:id/chat error:', err);
     res.status(500).send('서버 에러');
