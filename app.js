@@ -73,8 +73,8 @@ app.get('/', (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  // 비로그인 → 기존 로그인 페이지 보여주기
-  return res.render('login');
+  // 로그인 페이지 보여주기 + activeTab 추가(오류수정)
+  return res.render('login', { activeTab: 'login' });
 });
 app.get('/login', (req, res) => {
   res.render('login', { activeTab: 'login' });

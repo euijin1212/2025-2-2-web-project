@@ -131,9 +131,10 @@ router.post('/login', async (req, res) => {
         email: user.email, 
         nickname: user.nickname 
       };
-
-      // 로그인 성공 → 대시보드로
+      //req.session.regenerate() 은 비동기 함수이므로 세션 저장 후 리다이렉트
+    req.session.save(() => {
       return res.redirect('/dashboard');
+    });
     });
 
   } catch (e) {
