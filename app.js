@@ -73,8 +73,8 @@ app.get('/', (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  // 비로그인 → 기존 로그인 페이지 보여주기
-  return res.render('login');
+  // 로그인 페이지 보여주기 + activeTab 추가(오류수정)
+  return res.render('login', { activeTab: 'login' });
 });
 app.get('/login', (req, res) => {
   res.render('login', { activeTab: 'login' });
@@ -115,13 +115,16 @@ app.get('/mypage', requireLogin, async (req, res) => {
 
   try {
     const [myStudies] = await pool.query(`
-      SELECT 
+      SELECT
         id,
         title,
         description,
         max_members AS maxMembers,
         day,
-        created_at AS createdAt
+        created_at AS createdAt,
+        book_cover_url AS bookCoverUrl,
+        book_title AS bookTitle,
+        book_author AS bookAuthor
       FROM studies
       WHERE creator_id = ?
       ORDER BY created_at DESC

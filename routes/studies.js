@@ -846,8 +846,10 @@ router.get('/:id/chat', requireLogin, async (req, res) => {
     }
 
 // 최근 채팅 메시지 50개 불러오기
+//유저 ID 로 현재 채팅이 누구인지 구분해야하는데 안불러왔었음 수정완료
 const [messagesRaw] = await pool.query(`
   SELECT m.id,
+         m.user_id, 
          m.message,
          m.created_at AS createdAt,
          u.nickname

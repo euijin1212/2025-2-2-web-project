@@ -1,7 +1,7 @@
-# 2025-2-2-Web_Project
+# 2025-2-2-Web_Project - Online Reading Study Club
 
 
-## 전체적인 구조 
+## 전체적인 구조
 /project
   app.js                ← 서버의 메인 엔트리
   /routes
@@ -30,7 +30,7 @@ ALL /studies/:id/delete	삭제 처리
 ## 채팅 기능 구현했습니다 설치먼저
 npm install socket.io
 
-## 새로 추가된 DB입니다 . 그대로 복붙하면됩니다 먼저 users 
+## 새로 추가된 DB입니다 . 그대로 복붙하면됩니다 먼저 users
 
 CREATE TABLE users (
   id            BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -60,7 +60,7 @@ CREATE TABLE studies (
     FOREIGN KEY (creator_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-스터디 멤버 DB 
+스터디 멤버 DB
 
 CREATE TABLE study_members (
   id        BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -92,7 +92,7 @@ CREATE TABLE study_comments (
     FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-스터디 포스트 DB 
+스터디 포스트 DB
 
 CREATE TABLE study_posts (
   id         BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -109,7 +109,7 @@ CREATE TABLE study_posts (
     FOREIGN KEY (user_id)  REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-스터디 채팅 DB 
+스터디 채팅 DB
 
 CREATE TABLE study_chat_messages (
   id         BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
