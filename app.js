@@ -73,8 +73,8 @@ app.get('/', (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  // 비로그인 → 기존 로그인 페이지 보여주기
-  return res.render('login');
+  // 로그인 페이지 보여주기 + activeTab 추가(오류수정)
+  return res.render('login', { activeTab: 'login' });
 });
 app.get('/login', (req, res) => {
   res.render('login', { activeTab: 'login' });
@@ -86,13 +86,16 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 
   try {
     const [myStudies] = await pool.query(`
-      SELECT 
+      SELECT
         s.id,
         s.title,
         s.description,
         s.max_members AS maxMembers,
         s.day,
-        s.created_at AS createdAt
+        s.created_at AS createdAt,
+        s.book_cover_url AS bookCoverUrl,
+        s.book_title AS bookTitle,
+        s.book_author AS bookAuthor
       FROM studies s
       JOIN study_members m ON s.id = m.study_id
       WHERE m.user_id = ?
@@ -166,12 +169,25 @@ app.get('/search-books', async (req, res) => {
     const items = json.item || json.items || [];
     const rawList = Array.isArray(items) ? items : [items];
 
-    const books = rawList.map(it => ({
-      title: it.title || it.itemTitle || '',
-      author: it.author || it.authorInfo || '',
-      cover: it.cover || it.coverLarge || it.coverSmall || '',
-      isbn: it.isbn || ''
-    }));
+    const books = rawList.map(it => {
+      let coverUrl = it.coverLarge || it.cover || it.coverSmall || '';
+
+      // 알라딘 이미지 URL을 더 고해상도로 변경
+      if (coverUrl && coverUrl.includes('image.aladin.co.kr')) {
+        // coversum → cover500 (500px), cover → cover500
+        coverUrl = coverUrl.replace('/coversum/', '/cover500/');
+        coverUrl = coverUrl.replace('/cover/', '/cover500/');
+        // cover200 등도 cover500으로
+        coverUrl = coverUrl.replace(/\/cover\d+\//, '/cover500/');
+      }
+
+      return {
+        title: it.title || it.itemTitle || '',
+        author: it.author || it.authorInfo || '',
+        cover: coverUrl,
+        isbn: it.isbn || ''
+      };
+    });
 
     res.json({ books });
   } catch (err) {

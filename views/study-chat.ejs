@@ -259,10 +259,11 @@
     </div>
 
     <!-- 채팅 메시지 -->
+     
     <div id="chat-box">
         <% if (messages && messages.length > 0) { %>
             <% messages.forEach(function(m) { %>
-                <% const isMyMessage = user && m.userId && m.userId == user.id; %>
+                <% const isMyMessage = user && m.user_id && m.user_id == user.id; %>
                 <div class="chat-message <%= isMyMessage ? 'mine' : 'other' %>">
                     <div class="message-avatar">
                         <%= (m.nickname || '?')[0].toUpperCase() %>
